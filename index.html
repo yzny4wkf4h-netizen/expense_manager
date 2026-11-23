@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#126b5b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="مصروفاتي">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>مصروفاتي | Expense Manager</title>
+<style>
+:root{--green:#126b5b;--green2:#23977c;--bg:#f4f7f6;--ink:#172522;--muted:#687772;--line:#e5ece9;--white:#fff;--red:#c43c3c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{padding:calc(16px + env(safe-area-inset-top)) 18px 14px;display:flex;align-items:center;justify-content:space-between}
+h1{font-size:23px;margin:0;font-weight:800}.lang{border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 12px;font-size:14px}
+main{max-width:760px;margin:auto;padding:0 15px calc(100px + env(safe-area-inset-bottom))}
+.hero{background:linear-gradient(125deg,var(--green),var(--green2));color:white;border-radius:22px;padding:22px;margin:8px 0 15px}
+.hero small{opacity:.85}.total{font-size:34px;font-weight:850;margin:8px 0}.sub{opacity:.85;font-size:13px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stat,.panel,.item{background:#fff;border:1px solid var(--line);border-radius:17px;padding:15px}
+.stat strong{display:block;font-size:23px;margin:8px 0 2px}.muted{color:var(--muted);font-size:13px}
+.sectionhead{display:flex;justify-content:space-between;align-items:center;margin:22px 2px 10px}h2{font-size:18px;margin:0}
+.filters{display:flex;gap:7px;overflow:auto;padding:2px 0 10px}.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;padding:8px 12px;border-radius:999px}.chip.active{background:var(--green);color:#fff;border-color:var(--green)}
+.item{display:flex;align-items:center;gap:11px;margin-bottom:9px}.emoji{width:42px;height:42px;display:grid;place-items:center;background:#e8f4f0;border-radius:14px;font-size:20px}
+.details{flex:1;min-width:0}.details b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.amount{font-weight:800;white-space:nowrap}.actions{display:flex;gap:4px;margin-top:6px}.actions button{border:0;background:#f1f5f3;border-radius:8px;padding:6px 8px}
+button{font:inherit;cursor:pointer}.add{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom));left:16px;right:16px;max-width:728px;margin:auto;border:0;border-radius:16px;background:var(--green);color:#fff;padding:15px;font-weight:800;box-shadow:0 7px 24px #164f4230}
+.empty{text-align:center;color:var(--muted);padding:35px 12px}.hidden{display:none!important}
+.modal{position:fixed;inset:0;background:#0007;display:flex;align-items:flex-end;z-index:5}.sheet{background:#fff;width:100%;max-width:760px;margin:auto;border-radius:24px 24px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+.sheet h2{margin-bottom:16px}.field{margin:12px 0}.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+input,select{width:100%;border:1px solid #dbe4e0;border-radius:12px;padding:13px;font:inherit;background:white;color:var(--ink)}
+.row{display:flex;gap:10px}.row>*{flex:1}.primary,.secondary{border:0;border-radius:12px;padding:13px 16px;font-weight:750}.primary{background:var(--green);color:white}.secondary{background:#edf3f0;color:var(--ink)}
+.tabs{display:flex;gap:8px;margin-top:17px}.tab{flex:1;border:1px solid var(--line);border-radius:12px;padding:10px;background:white}.tab.active{background:#e6f2ee;border-color:#b9d8ce;color:var(--green);font-weight:800}
+.barline{height:9px;background:#edf2ef;border-radius:99px;overflow:hidden;margin-top:9px}.barline span{display:block;height:100%;background:var(--green);border-radius:99px}
+.reportrow{padding:13px;background:#fff;border:1px solid var(--line);border-radius:14px;margin:8px 0}
+footer{text-align:center;color:#8a9691;font-size:11px;padding:12px}
+</style>
+</head>
+<body>
+<header><h1 id="appTitle">مصروفاتي</h1><button class="lang" id="langBtn">English</button></header>
+<main>
+ <section id="homeView">
+  <div class="hero"><small data-i18n="total">إجمالي المصروفات</small><div class="total" id="total">0 د.ع</div><div class="sub" data-i18n="alltime">مجموع المصروفات المسجلة</div></div>
+  <div class="stats"><div class="stat"><span class="muted" data-i18n="count">عدد العمليات</span><strong id="count">0</strong></div><div class="stat"><span class="muted" data-i18n="categories">التصنيفات المستخدمة</span><strong id="categoryCount">0</strong></div></div>
+  <div class="sectionhead"><h2 data-i18n="transactions">المصروفات</h2></div>
+  <div class="filters" id="filters"></div><div id="expenseList"></div>
+ </section>
+ <section id="reportsView" class="hidden">
+  <div class="hero"><small data-i18n="total">إجمالي المصروفات</small><div class="total" id="reportTotal">0 د.ع</div><div class="sub" data-i18n="reportHint">تحليل مصروفاتك حسب التصنيف والشهر</div></div>
+  <h2 data-i18n="byCategory">حسب التصنيف</h2><div id="categoryReport"></div>
+  <div class="sectionhead"><h2 data-i18n="monthly">الملخص الشهري</h2></div><div id="monthlyReport"></div>
+ </section>
+ <div class="tabs"><button class="tab active" id="homeTab" data-i18n="home">الرئيسية</button><button class="tab" id="reportTab" data-i18n="reports">التقارير</button></div>
+ <footer data-i18n="local">بياناتك محفوظة محلياً على هذا الجهاز</footer>
+</main>
+<button class="add" id="addBtn">＋ إضافة مصروف</button>
+<div id="modal" class="modal hidden"><div class="sheet">
+ <h2 id="formTitle">إضافة مصروف</h2>
+ <form id="expenseForm">
+  <div class="field"><label data-i18n="description">الوصف</label><input id="description" maxlength="80" required placeholder="مثال: وجبة الغداء"></div>
+  <div class="row"><div class="field"><label data-i18n="amount">المبلغ (دينار عراقي)</label><input id="amount" type="number" min="1" step="1" required inputmode="decimal" placeholder="10000"></div><div class="field"><label data-i18n="date">التاريخ</label><input id="date" type="date" required></div></div>
+  <div class="field"><label data-i18n="category">التصنيف</label><select id="category"><option value="Food">طعام</option><option value="Transport">مواصلات</option><option value="Bills">فواتير</option><option value="Study">دراسة</option><option value="Other">أخرى</option></select></div>
+  <div class="row"><button type="button" class="secondary" id="cancelBtn">إلغاء</button><button type="submit" class="primary" id="saveBtn">حفظ</button></div>
+ </form>
+</div></div>
+<script>
+const translations={
+ ar:{title:'مصروفاتي',total:'إجمالي المصروفات',alltime:'مجموع المصروفات المسجلة',count:'عدد العمليات',categories:'التصنيفات المستخدمة',transactions:'المصروفات',home:'الرئيسية',reports:'التقارير',byCategory:'حسب التصنيف',monthly:'الملخص الشهري',reportHint:'تحليل مصروفاتك حسب التصنيف والشهر',local:'بياناتك محفوظة محلياً على هذا الجهاز',add:'＋ إضافة مصروف',edit:'تعديل المصروف',description:'الوصف',amount:'المبلغ (دينار عراقي)',date:'التاريخ',category:'التصنيف',save:'حفظ',cancel:'إلغاء',empty:'لا توجد مصروفات بعد. أضف أول مصروف لك.',all:'الكل',Food:'طعام',Transport:'مواصلات',Bills:'فواتير',Study:'دراسة',Other:'أخرى',editBtn:'تعديل',deleteBtn:'حذف',confirm:'هل تريد حذف هذا المصروف؟',noReports:'لا توجد بيانات بعد'},
+ en:{title:'My Expenses',total:'Total expenses',alltime:'All recorded expenses',count:'Transactions',categories:'Categories used',transactions:'Expenses',home:'Home',reports:'Reports',byCategory:'By category',monthly:'Monthly summary',reportHint:'Spending by category and month',local:'Your data is saved locally on this device',add:'＋ Add expense',edit:'Edit expense',description:'Description',amount:'Amount (IQD)',date:'Date',category:'Category',save:'Save',cancel:'Cancel',empty:'No expenses yet. Add your first expense.',all:'All',Food:'Food',Transport:'Transport',Bills:'Bills',Study:'Study',Other:'Other',editBtn:'Edit',deleteBtn:'Delete',confirm:'Delete this expense?',noReports:'No data yet'}
+};
+const icons={Food:'🍽️',Transport:'🚌',Bills:'🧾',Study:'📚',Other:'📦'};
+let lang='ar',items=[],filter='All',editing=null,view='home';
+const $=id=>document.getElementById(id),tr=k=>translations[lang][k]||k;
+function load(){try{items=JSON.parse(localStorage.getItem('expense-items-v1')||'[]')}catch{items=[]}}
+function persist(){localStorage.setItem('expense-items-v1',JSON.stringify(items))}
+function fmt(n){return new Intl.NumberFormat(lang==='ar'?'ar-IQ':'en-US',{maximumFractionDigits:0}).format(n)+' د.ع'}
+function dateNow(){return new Date().toISOString().slice(0,10)}
+function render(){
+ document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';$('appTitle').textContent=tr('title');$('langBtn').textContent=lang==='ar'?'English':'العربية';document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=tr(el.dataset.i18n));$('addBtn').textContent=tr('add');
+ const sum=items.reduce((a,x)=>a+x.amount,0);$('total').textContent=fmt(sum);$('reportTotal').textContent=fmt(sum);$('count').textContent=items.length;$('categoryCount').textContent=new Set(items.map(x=>x.category)).size;
+ $('filters').innerHTML=['All','Food','Transport','Bills','Study','Other'].map(c=>`<button class="chip ${filter===c?'active':''}" data-filter="${c}">${tr(c)}</button>`).join('');
+ $('filters').querySelectorAll('button').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;render()});
+ const shown=items.filter(x=>filter==='All'||x.category===filter).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+ $('expenseList').innerHTML=shown.length?shown.map(x=>`<article class="item"><div class="emoji">${icons[x.category]}</div><div class="details"><b>${escapeHtml(x.description)}</b><span class="muted">${tr(x.category)} · ${x.date}</span><div class="actions"><button data-edit="${x.id}">✎ ${tr('editBtn')}</button><button data-delete="${x.id}">⌫ ${tr('deleteBtn')}</button></div></div><div class="amount">${fmt(x.amount)}</div></article>`).join(''):`<div class="empty">${tr('empty')}</div>`;
+ $('expenseList').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openForm(Number(b.dataset.edit)));
+ $('expenseList').querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{if(confirm(tr('confirm'))){items=items.filter(x=>x.id!==Number(b.dataset.delete));persist();render()}});
+ renderReports(sum);
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderReports(total){
+ const cats={};const months={};items.forEach(x=>{cats[x.category]=(cats[x.category]||0)+x.amount;const m=x.date.slice(0,7);months[m]=(months[m]||0)+x.amount});
+ $('categoryReport').innerHTML=Object.entries(cats).length?Object.entries(cats).map(([c,v])=>`<div class="reportrow"><div style="display:flex;justify-content:space-between;gap:8px"><b>${tr(c)}</b><b>${fmt(v)} · ${total?(v/total*100).toFixed(1):0}%</b></div><div class="barline"><span style="width:${total?v/total*100:0}%"></span></div></div>`).join(''):`<p class="muted">${tr('noReports')}</p>`;
+ $('monthlyReport').innerHTML=Object.entries(months).sort((a,b)=>b[0].localeCompare(a[0])).map(([m,v])=>`<div class="reportrow" style="display:flex;justify-content:space-between"><b>${m}</b><b>${fmt(v)}</b></div>`).join('')||`<p class="muted">${tr('noReports')}</p>`;
+}
+function openForm(id=null){editing=id;const x=items.find(i=>i.id===id);$('formTitle').textContent=x?tr('edit'):tr('add').replace('＋ ','');$('description').value=x?.description||'';$('amount').value=x?.amount||'';$('date').value=x?.date||dateNow();$('category').value=x?.category||'Food';$('modal').classList.remove('hidden')}
+function closeForm(){$('modal').classList.add('hidden')}
+$('expenseForm').onsubmit=e=>{e.preventDefault();const record={id:editing||Date.now(),description:$('description').value.trim(),amount:Number($('amount').value),date:$('date').value,category:$('category').value};if(!record.description||!Number.isFinite(record.amount)||record.amount<=0)return;if(editing)items=items.map(x=>x.id===editing?record:x);else items.push(record);persist();closeForm();render()};
+$('addBtn').onclick=()=>openForm();$('cancelBtn').onclick=closeForm;$('langBtn').onclick=()=>{lang=lang==='ar'?'en':'ar';render()};
+$('homeTab').onclick=()=>switchView('home');$('reportTab').onclick=()=>switchView('reports');
+function switchView(v){view=v;$('homeView').classList.toggle('hidden',v!=='home');$('reportsView').classList.toggle('hidden',v!=='reports');$('homeTab').classList.toggle('active',v==='home');$('reportTab').classList.toggle('active',v==='reports');$('addBtn').classList.toggle('hidden',v!=='home')}
+load();render();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>
